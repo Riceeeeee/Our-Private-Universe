@@ -16,43 +16,87 @@ export default function OurGoals({ initialGoals = [] }: OurGoalsProps) {
   const [goals, setGoals] = useState<Goal[]>(initialGoals)
   const [newGoal, setNewGoal] = useState('')
   const [showInput, setShowInput] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const fetchGoals = async () => {
+    try {
+      const response = await fetch('/api/goals')
+      const data = await response.json()
+      if (data.goals) {
+        setGoals(data.goals)
+      }
+    } catch (error) {
+      console.error('Error fetching goals:', error)
+    }
+  }
 
   useEffect(() => {
-    const stored = localStorage.getItem('ourGoals')
-    if (stored) {
-      setGoals(JSON.parse(stored))
-    } else if (initialGoals.length > 0) {
-      localStorage.setItem('ourGoals', JSON.stringify(initialGoals))
-    }
-  }, [initialGoals])
+    fetchGoals()
+  }, [])
 
-  const addGoal = () => {
+  const addGoal = async () => {
     if (newGoal.trim()) {
-      const goal: Goal = {
-        id: Date.now().toString(),
-        text: newGoal,
-        completed: false,
+      setLoading(true)
+      try {
+        const response = await fetch('/api/goals', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: newGoal,
+          }),
+        })
+        const data = await response.json()
+        if (data.goals) {
+          setGoals(data.goals)
+          setNewGoal('')
+          setShowInput(false)
+        }
+      } catch (error) {
+        console.error('Error adding goal:', error)
+      } finally {
+        setLoading(false)
       }
-      const updatedGoals = [...goals, goal]
-      setGoals(updatedGoals)
-      localStorage.setItem('ourGoals', JSON.stringify(updatedGoals))
-      setNewGoal('')
-      setShowInput(false)
     }
   }
 
-  const toggleGoal = (id: string) => {
-    const updatedGoals = goals.map((goal) =>
-      goal.id === id ? { ...goal, completed: !goal.completed } : goal
-    )
-    setGoals(updatedGoals)
-    localStorage.setItem('ourGoals', JSON.stringify(updatedGoals))
+  const toggleGoal = async (id: string) => {
+    const goal = goals.find((g) => g.id === id)
+    if (!goal) return
+
+    try {
+      const response = await fetch('/api/goals', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          completed: !goal.completed,
+        }),
+      })
+      const data = await response.json()
+      if (data.goals) {
+        setGoals(data.goals)
+      }
+    } catch (error) {
+      console.error('Error toggling goal:', error)
+    }
   }
 
-  const deleteGoal = (id: string) => {
-    const updatedGoals = goals.filter((goal) => goal.id !== id)
-    setGoals(updatedGoals)
-    localStorage.setItem('ourGoals', JSON.stringify(updatedGoals))
+  const deleteGoal = async (id: string) => {
+    try {
+      const response = await fetch(`/api/goals?id=${id}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.goals) {
+        setGoals(data.goals)
+      }
+    } catch (error) {
+      console.error('Error deleting goal:', error)
+    }
   }
 
   return (
@@ -82,9 +126,10 @@ export default function OurGoals({ initialGoals = [] }: OurGoalsProps) {
             <div className="flex gap-3">
               <button
                 onClick={addGoal}
-                className="flex-1 py-2 bg-pink-400 hover:bg-pink-500 text-white rounded-lg font-semibold transition-colors duration-300"
+                disabled={loading}
+                className="flex-1 py-2 bg-pink-400 hover:bg-pink-500 text-white rounded-lg font-semibold transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Thêm
+                {loading ? 'Đang thêm...' : 'Thêm'}
               </button>
               <button
                 onClick={() => {

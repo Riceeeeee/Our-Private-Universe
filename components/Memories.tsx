@@ -16,41 +16,70 @@ interface MemoriesProps {
 export default function Memories({ initialMemories = [] }: MemoriesProps) {
   const [memories, setMemories] = useState<Memory[]>(initialMemories)
   const [showForm, setShowForm] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [newMemory, setNewMemory] = useState({
     image: '',
     date: '',
     description: '',
   })
 
-  useEffect(() => {
-    const stored = localStorage.getItem('memories')
-    if (stored) {
-      setMemories(JSON.parse(stored))
-    } else if (initialMemories.length > 0) {
-      localStorage.setItem('memories', JSON.stringify(initialMemories))
-    }
-  }, [initialMemories])
-
-  const addMemory = () => {
-    if (newMemory.date && newMemory.description) {
-      const memory: Memory = {
-        id: Date.now().toString(),
-        image: newMemory.image,
-        date: newMemory.date,
-        description: newMemory.description,
+  const fetchMemories = async () => {
+    try {
+      const response = await fetch('/api/memories')
+      const data = await response.json()
+      if (data.memories) {
+        setMemories(data.memories)
       }
-      const updatedMemories = [memory, ...memories]
-      setMemories(updatedMemories)
-      localStorage.setItem('memories', JSON.stringify(updatedMemories))
-      setNewMemory({ image: '', date: '', description: '' })
-      setShowForm(false)
+    } catch (error) {
+      console.error('Error fetching memories:', error)
     }
   }
 
-  const deleteMemory = (id: string) => {
-    const updatedMemories = memories.filter((memory) => memory.id !== id)
-    setMemories(updatedMemories)
-    localStorage.setItem('memories', JSON.stringify(updatedMemories))
+  useEffect(() => {
+    fetchMemories()
+  }, [])
+
+  const addMemory = async () => {
+    if (newMemory.date && newMemory.description) {
+      setLoading(true)
+      try {
+        const response = await fetch('/api/memories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: newMemory.image,
+            date: newMemory.date,
+            description: newMemory.description,
+          }),
+        })
+        const data = await response.json()
+        if (data.memories) {
+          setMemories(data.memories)
+          setNewMemory({ image: '', date: '', description: '' })
+          setShowForm(false)
+        }
+      } catch (error) {
+        console.error('Error adding memory:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+  }
+
+  const deleteMemory = async (id: string) => {
+    try {
+      const response = await fetch(`/api/memories?id=${id}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.memories) {
+        setMemories(data.memories)
+      }
+    } catch (error) {
+      console.error('Error deleting memory:', error)
+    }
   }
 
   return (
@@ -92,9 +121,10 @@ export default function Memories({ initialMemories = [] }: MemoriesProps) {
             <div className="flex gap-3">
               <button
                 onClick={addMemory}
-                className="flex-1 py-2 bg-pink-400 hover:bg-pink-500 text-white rounded-lg font-semibold transition-colors duration-300"
+                disabled={loading}
+                className="flex-1 py-2 bg-pink-400 hover:bg-pink-500 text-white rounded-lg font-semibold transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Thêm
+                {loading ? 'Đang thêm...' : 'Thêm'}
               </button>
               <button
                 onClick={() => {

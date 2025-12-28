@@ -12,26 +12,48 @@ export default function SecretLetter() {
   const [letters, setLetters] = useState<Letter[]>([])
   const [newLetter, setNewLetter] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const fetchLetters = async () => {
+    try {
+      const response = await fetch('/api/letters')
+      const data = await response.json()
+      if (data.letters) {
+        setLetters(data.letters)
+      }
+    } catch (error) {
+      console.error('Error fetching letters:', error)
+    }
+  }
 
   useEffect(() => {
-    const stored = localStorage.getItem('secretLetters')
-    if (stored) {
-      setLetters(JSON.parse(stored))
-    }
+    fetchLetters()
   }, [])
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (newLetter.trim()) {
-      const letter: Letter = {
-        id: Date.now().toString(),
-        content: newLetter,
-        timestamp: new Date().toLocaleString('vi-VN'),
+      setLoading(true)
+      try {
+        const response = await fetch('/api/letters', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: newLetter,
+          }),
+        })
+        const data = await response.json()
+        if (data.letters) {
+          setLetters(data.letters)
+          setNewLetter('')
+          setShowForm(false)
+        }
+      } catch (error) {
+        console.error('Error sending letter:', error)
+      } finally {
+        setLoading(false)
       }
-      const updatedLetters = [letter, ...letters]
-      setLetters(updatedLetters)
-      localStorage.setItem('secretLetters', JSON.stringify(updatedLetters))
-      setNewLetter('')
-      setShowForm(false)
     }
   }
 
@@ -60,9 +82,10 @@ export default function SecretLetter() {
             <div className="flex gap-3">
               <button
                 onClick={handleSend}
-                className="flex-1 py-2 bg-pink-400 hover:bg-pink-500 text-white rounded-lg font-semibold transition-colors duration-300"
+                disabled={loading}
+                className="flex-1 py-2 bg-pink-400 hover:bg-pink-500 text-white rounded-lg font-semibold transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Gửi
+                {loading ? 'Đang gửi...' : 'Gửi'}
               </button>
               <button
                 onClick={() => {
