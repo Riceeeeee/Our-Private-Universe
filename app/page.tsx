@@ -8,15 +8,15 @@ import OurGoals from '@/components/OurGoals'
 
 export default function Home() {
   // Ngày bắt đầu yêu nhau - bạn có thể thay đổi ngày này
-  const startDate = '2024-01-01' // Format: YYYY-MM-DD
+  const startDate = '2025-09-15' // Format: YYYY-MM-DD
 
   // Dữ liệu mẫu cho kỷ niệm (có thể xóa và thêm mới)
   const sampleMemories = [
     {
       id: '1',
       image: '',
-      date: '01/01/2024',
-      description: 'Ngày đầu tiên chúng ta gặp nhau',
+      date: '15/09/2025',
+      description: 'Ngày đầu tiên chúng ta bắt đầu yêu nhau ❤️',
     },
   ]
 
