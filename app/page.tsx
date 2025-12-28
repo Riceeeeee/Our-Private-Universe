@@ -11,14 +11,7 @@ export default function Home() {
   const startDate = '2025-09-15' // Format: YYYY-MM-DD
 
   // Dữ liệu mẫu cho kỷ niệm (có thể xóa và thêm mới)
-  const sampleMemories = [
-    {
-      id: '1',
-      image: '',
-      date: '15/09/2025',
-      description: 'Ngày đầu tiên chúng ta bắt đầu yêu nhau ❤️',
-    },
-  ]
+  const sampleMemories = []
 
   // Dữ liệu mẫu cho mục tiêu (có thể xóa và thêm mới)
   const sampleGoals = [
