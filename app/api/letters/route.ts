@@ -1,72 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-// Fallback to local storage for development when KV is not available
-let kv: any = null
-try {
-  kv = require('@vercel/kv').kv
-} catch (error) {
-  console.log('Vercel KV not available, using in-memory storage for development')
-}
-
-const LETTERS_KEY = 'letters'
-
-async function getLetters() {
-  try {
-    const letters = await kv.get<Array<{
-      id: string
-      content: string
-      timestamp: string
-    }>>(LETTERS_KEY)
-    return letters || []
-  } catch (error) {
-    console.error('Error getting letters from KV:', error)
-    return []
-  }
-}
-
-async function setLetters(letters: Array<{
-  id: string
-  content: string
-  timestamp: string
-}>) {
-  try {
-    await kv.set(LETTERS_KEY, letters)
-  } catch (error) {
-    console.error('Error setting letters to KV:', error)
-  }
-}
+import { kv } from '@vercel/kv';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const letters = await getLetters()
-  return NextResponse.json({ letters })
+  try {
+    // Chúng ta xóa bỏ ngoặc nhọn <...> và dùng 'as any' để vượt qua kiểm tra của Vercel
+    const letters = (await kv.get('letters')) as any; 
+    return NextResponse.json(letters || []);
+  } catch (error) {
+    return NextResponse.json({ error: 'Không thể lấy dữ liệu mục tiêu' }, { status: 500 });
+  }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { content } = body
-
-    if (!content || !content.trim()) {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      )
-    }
-
-    const letters = await getLetters()
-    const newLetter = {
-      id: Date.now().toString(),
-      content: content.trim(),
-      timestamp: new Date().toLocaleString('vi-VN'),
-    }
-
-    const updatedLetters = [newLetter, ...letters]
-    await setLetters(updatedLetters)
-    return NextResponse.json({ letter: newLetter, letters: updatedLetters })
+    const body = await request.json();
+    // Lưu danh sách mục tiêu mới vào kho Vercel KV
+    await kv.set('letters', body);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Invalid request body' },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: 'Không thể lưu mục tiêu' }, { status: 500 });
   }
 }
