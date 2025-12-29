@@ -47,5 +47,55 @@ Trang web được thiết kế responsive, hoạt động tốt trên cả đi�
 
 ## Lưu trữ dữ liệu
 
-Tất cả dữ liệu (kỷ niệm, thư, mục tiêu) được lưu trong Local Storage của trình duyệt.
+Dữ liệu được lưu trữ trên **Vercel KV** (Redis database), cho phép đồng bộ theo thời gian thực giữa tất cả các thiết bị.
 
+## Deploy lên Vercel và Kết nối KV Database
+
+### Bước 1: Push code lên GitHub
+```bash
+git add .
+git commit -m "Deploy to Vercel"
+git push origin main
+```
+
+### Bước 2: Deploy lên Vercel
+
+1. Truy cập [https://vercel.com](https://vercel.com) và đăng nhập
+2. Click **"Add New..."** → **"Project"**
+3. Import repository GitHub của bạn
+4. Click **"Deploy"** (không cần thay đổi setting gì)
+
+### Bước 3: Tạo Vercel KV Database
+
+1. Sau khi deploy xong, vào **Dashboard** của project
+2. Click tab **"Storage"** ở menu trên
+3. Click **"Create Database"**
+4. Chọn **"KV"** (Key-Value Store)
+5. Đặt tên database (ví dụ: `our-universe-kv`)
+6. Chọn region gần bạn nhất
+7. Click **"Create"**
+
+### Bước 4: Kết nối KV với Project
+
+1. Sau khi tạo KV xong, click vào database vừa tạo
+2. Vào tab **"Settings"** của KV database
+3. Kéo xuống phần **"Connect"**
+4. Trong dropdown, chọn project của bạn
+5. Click **"Connect Project"**
+6. Vercel sẽ tự động thêm environment variables cần thiết
+
+### Bước 5: Redeploy
+
+1. Quay lại tab **"Deployments"** của project
+2. Click vào deployment mới nhất
+3. Click nút **"..."** (3 chấm) bên phải
+4. Chọn **"Redeploy"**
+5. Đợi deploy xong
+
+🎉 **Hoàn thành!** Web của bạn giờ đã kết nối với Vercel KV. Mọi thay đổi sẽ được lưu và đồng bộ cho tất cả người dùng!
+
+### Kiểm tra
+
+- Mở web trên nhiều thiết bị khác nhau
+- Thêm kỷ niệm hoặc mục tiêu ở thiết bị A
+- Tải lại trang ở thiết bị B → Dữ liệu sẽ xuất hiện ngay lập tức!

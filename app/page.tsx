@@ -11,7 +11,12 @@ export default function Home() {
   const startDate = '2025-09-15' // Format: YYYY-MM-DD
 
   // Dữ liệu mẫu cho kỷ niệm (có thể xóa và thêm mới)
-  const sampleMemories = []
+  const sampleMemories: Array<{
+    id: string
+    image: string
+    date: string
+    description: string
+  }> = []
 
   // Dữ liệu mẫu cho mục tiêu (có thể xóa và thêm mới)
   const sampleGoals = [
@@ -39,4 +44,3 @@ export default function Home() {
     </main>
   )
 }
-
