@@ -17,9 +17,16 @@ export default function SecretLetter() {
   const fetchMessages = async () => {
     try {
       const response = await fetch('/api/messages')
-      const data = await response.json()
-      if (data.messages) {
-        setMessages(data.messages)
+      const data: string[] = await response.json()
+      if (Array.isArray(data)) {
+        // The API returns an array of strings, but the UI expects an array of Message objects.
+        // We'll map the strings to objects to match the component's state type.
+        const formattedMessages = data.map((messageContent, index) => ({
+          id: `msg-${index}`,
+          content: messageContent,
+          timestamp: new Date().toLocaleDateString(), // The API doesn't provide a timestamp for messages
+        })).reverse(); // Reverse to show the latest messages first
+        setMessages(formattedMessages)
       }
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -39,16 +46,22 @@ export default function SecretLetter() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            content: newMessage,
-          }),
+          // The API route expects a 'message' property, not 'content' or 'text'
+          body: JSON.stringify({ message: newMessage }),
         })
-        const data = await response.json()
-        if (data.messages) {
-          setMessages(data.messages)
-          setNewMessage('')
-          setShowForm(false)
+
+        if (!response.ok) {
+          // If the response is not successful, read the error message as text
+          // to avoid a JSON parsing error on the client.
+          const errorText = await response.text();
+          throw new Error(`Failed to send message: ${errorText}`);
         }
+
+        // After a successful POST, we don't get the list back.
+        // Instead, we re-fetch the entire list to update the UI.
+        await fetchMessages();
+        setNewMessage('')
+        setShowForm(false)
       } catch (error) {
         console.error('Error sending message:', error)
       } finally {

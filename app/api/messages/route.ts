@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json(messages);
   } catch (error) {
     console.error('Lỗi khi lấy tin nhắn:', error);
-    return new NextResponse('Lỗi Máy chủ Nội bộ', { status: 500 });
+    return NextResponse.json({ error: 'Lỗi Máy chủ Nội bộ' }, { status: 500 });
   }
 }
 
@@ -22,20 +22,20 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const { text } = await request.json();
 
     // Kiểm tra xem tin nhắn có tồn tại không
-    if (!message) {
-      return new NextResponse('Nội dung tin nhắn là bắt buộc', { status: 400 });
+    if (!text) {
+      return NextResponse.json({ error: 'Nội dung không được để trống' }, { status: 400 });
     }
 
     // Thêm tin nhắn mới vào cuối danh sách 'messages'
-    await kv.rpush('messages', message);
+    await kv.rpush('messages', text);
 
     // Trả về phản hồi thành công
-    return new NextResponse('Đã thêm tin nhắn', { status: 201 });
+    return NextResponse.json({ message: 'Đã thêm tin nhắn' }, { status: 201 });
   } catch (error) {
     console.error('Lỗi khi thêm tin nhắn:', error);
-    return new NextResponse('Lỗi Máy chủ Nội bộ', { status: 500 });
+    return NextResponse.json({ error: 'Lỗi Máy chủ Nội bộ' }, { status: 500 });
   }
 }
