@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
+
+// Fallback to local storage for development when KV is not available
+let kv: any = null
+try {
+  kv = require('@vercel/kv').kv
+} catch (error) {
+  console.log('Vercel KV not available, using in-memory storage for development')
+}
 
 const GOALS_KEY = 'goals'
 
@@ -77,7 +84,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const goals = await getGoals()
-    const updatedGoals = goals.map((goal) =>
+    const updatedGoals = goals.map((goal: any) =>
       goal.id === id ? { ...goal, completed } : goal
     )
     await setGoals(updatedGoals)
@@ -100,7 +107,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const goals = await getGoals()
-    const updatedGoals = goals.filter((goal) => goal.id !== id)
+    const updatedGoals = goals.filter((goal: any) => goal.id !== id)
     await setGoals(updatedGoals)
     return NextResponse.json({ goals: updatedGoals })
   } catch (error) {
@@ -110,4 +117,3 @@ export async function DELETE(request: NextRequest) {
     )
   }
 }
-

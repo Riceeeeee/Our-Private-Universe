@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
 
 const MEMORIES_KEY = 'memories'
 
@@ -87,4 +86,3 @@ export async function DELETE(request: NextRequest) {
     )
   }
 }
-

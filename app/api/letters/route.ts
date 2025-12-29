@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
+
+// Fallback to local storage for development when KV is not available
+let kv: any = null
+try {
+  kv = require('@vercel/kv').kv
+} catch (error) {
+  console.log('Vercel KV not available, using in-memory storage for development')
+}
 
 const LETTERS_KEY = 'letters'
 
@@ -63,4 +70,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
